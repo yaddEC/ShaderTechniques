@@ -16,4 +16,5 @@ void main()
 	FragPos = vec3(vec4(aPos, 1.0) * Model);
 	TexCoord = aTexCoord;
 	Normal = aNormal * mat3(transpose(inverse(Model)));
+
 }

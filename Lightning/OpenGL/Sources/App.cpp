@@ -52,9 +52,6 @@ void App::Init(AppInitializer init)
 void App::SphereColl()
 {
 	player1 = SphereCollider(&mesh[0]->pos, Sphere(1));
-	mesh.push_back(&player1.colVisualisation);
-	player2 = SphereCollider(&mesh[0]->pos, Sphere(1));
-	mesh.push_back(&player2.colVisualisation);
 
 	for (int i = 1; i < mesh.size(); i++)
 	{
@@ -62,7 +59,7 @@ void App::SphereColl()
 		platforms.push_back(Platform(platform1, &player2.colVisualisation));
 	}
 
-	player = Actor(player1, mesh[0],0.05);
+	player = Actor(player1, mesh[0], 0.05);
 }
 
 void App::Update(int shaderProgram)
@@ -71,7 +68,6 @@ void App::Update(int shaderProgram)
 	processInput(window);
 	player.Update(platforms);
 
-	player2.Update();
 	platform1.Update(); 
 
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -285,10 +281,10 @@ void App::DirectLightsToShaders(unsigned int shaderProgram)
 
 	for (int i = 0; i < directLights.size(); i++)
 	{
-		diffuseColor << "directLights[" << i << "].diffuseColor";
-		ambientColor << "directLights[" << i << "].ambientColor";
+		diffuseColor  << "directLights[" << i << "].diffuseColor";
+		ambientColor  << "directLights[" << i << "].ambientColor";
 		specularColor << "directLights[" << i << "].specularColor";
-		lightDir << "directLights[" << i << "].direction";
+		lightDir      << "directLights[" << i << "].direction";
 
 		glUniform3f(glGetUniformLocation(shaderProgram, diffuseColor.str().c_str()), directLights[i]->diffuseColor.x, directLights[i]->diffuseColor.y, directLights[i]->diffuseColor.z);
 		glUniform3f(glGetUniformLocation(shaderProgram, ambientColor.str().c_str()), directLights[i]->ambientColor.x, directLights[i]->ambientColor.y, directLights[i]->ambientColor.z);

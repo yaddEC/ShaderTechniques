@@ -9,7 +9,7 @@ namespace Resources
 	class Shader
 	{
 	public:
-		void LoadShaders(int& shaderProgram);
+		void LoadShaders(const char* vertexShaderLink = "Resources/Shaders/vertexShader.glsl", const char* fragShaderLink = "Resources/Shaders/fragShader.glsl");
 		int shaderProgram;
 	};
 }

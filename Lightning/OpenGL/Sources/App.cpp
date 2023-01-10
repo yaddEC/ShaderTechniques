@@ -46,6 +46,10 @@ void App::Init(AppInitializer init)
 	}
 	glEnable(GL_DEPTH_TEST);
 
+	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+
+	skyboxShader.LoadShaders("Resources/Shaders/skyboxVert.glsl", "Resources/Shaders/skyboxFrag.glsl");
+
 	
 }
 
@@ -80,6 +84,7 @@ void App::Update(int shaderProgram)
 		direction.Normalize();
 		Vector3D target = camera.camPos + direction;
 		camera.Update(target);
+		SkyCam = camera.LookAt(camera.camPos, target, camera.camUP);
 		PV = camera.projectionMatrix * camera.viewMatrix;
 	}
 	else
@@ -88,7 +93,9 @@ void App::Update(int shaderProgram)
 		camera.camRight.Normalize();
 
 		camera.viewMatrix = camera.LookAt(camera.camPos, camera.camPos + camera.camFront, camera.camUP);
+		SkyCam = camera.LookAt(camera.camPos, camera.camPos + camera.camFront, camera.camUP);
 		camera.projectionMatrix = matrix4.GetProjection(80.f, 0.005f, 1000.f);
+
 		PV = camera.projectionMatrix * camera.viewMatrix;
 	}
 
@@ -172,6 +179,11 @@ void App::Update(int shaderProgram)
 
 	if (drawModel)
 	{
+		Matrix4 temp;
+		SkyCam.inverse(SkyCam, temp);
+		Skybox.SkyboxUpdate(skyboxShader.shaderProgram, temp, camera.projectionMatrix.GetTransposeMat4());
+
+		glUseProgram(shaderProgram);
 		for (int i = 0; i < mesh.size(); i++)
 		{
 			mesh[i]->Update(shaderProgram, PV);

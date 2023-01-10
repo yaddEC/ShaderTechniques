@@ -99,7 +99,7 @@ int main()
 	manager.CreateResource<Model>("Player", "Resources/Obj/Rammus.obj");
 	model = manager.GetResource<Model>("Cube");
 	Player = manager.GetResource<Model>("Player");
-	shader.LoadShaders(shader.shaderProgram);
+	shader.LoadShaders();
 	
 	app.pointLights.push_back(new PointLight(Vector3D(0, 10, 0), Vector3D(1, 1, 1), 0, 0.022f, 0.0019f));
 	app.directLights.push_back(new DirectionnalLight(Vector3D(0, 0, -1), Vector3D(1, 1, 1)));
@@ -110,6 +110,17 @@ int main()
 	app.mesh.push_back(new Mesh(model, Vector3D(0, 0, 0), Vector3D(0, 3, 0), Vector3D(10, 10, 10), "Resources/Textures/Bricks.png"));
 	app.mesh.push_back(new Mesh(model, Vector3D(0, 50, 0), Vector3D(0, 0, 0), Vector3D(1, 1, 1), "Resources/Textures/Bricks.png"));
 
+	app.Skybox = Mesh(model, Vector3D(0, 0, 0), Vector3D(0, 0, 0), Vector3D(1, 1, 1), 1);
+	std::vector<std::string> faces
+	{
+		"Resources/Textures/PX.bmp",
+		"Resources/Textures/NX.bmp",
+		"Resources/Textures/NY.bmp",
+		"Resources/Textures/PY.bmp",
+		"Resources/Textures/PZ.bmp",
+		"Resources/Textures/NZ.bmp",
+	};
+	app.Skybox.loadCubeMap(faces);
 	app.SphereColl();
 
 	// create a sampler and parameterize it

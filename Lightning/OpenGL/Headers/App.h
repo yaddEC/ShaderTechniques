@@ -42,6 +42,7 @@ namespace Core
         Camera camera;
         Actor player;
         Matrix4 PV;
+        Matrix4 SkyCam;
         Matrix4 matrix4;
         std::vector<Platform> platforms;
         std::vector<LowRenderer::Mesh*> mesh;
@@ -60,6 +61,9 @@ namespace Core
         bool AZERTY = false;
         bool Option = false;
         float smoothSpeed = 0.15f;
+        unsigned int cubemapTexture;
+        Mesh Skybox;
+        Shader skyboxShader;
 
     private:
         std::stringstream diffuseColor;

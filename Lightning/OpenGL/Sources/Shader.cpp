@@ -1,6 +1,6 @@
 #include <Shader.h>
 
-void Resources::Shader::LoadShaders(int& shaderProgram)
+void Resources::Shader::LoadShaders(const char* vertexShaderLink, const char* fragShaderLink)
 {
 	bool loadTrue = true;
 	int success;
@@ -14,7 +14,7 @@ void Resources::Shader::LoadShaders(int& shaderProgram)
 	// ------------------------------------
 	// vertex shader
 
-	file.open("Resources/Shaders/vertexShader.glsl");
+	file.open(vertexShaderLink);
 	if (file.is_open())
 	{
 		while (getline(file, line))
@@ -41,7 +41,7 @@ void Resources::Shader::LoadShaders(int& shaderProgram)
 	line = "";
 
 	// fragment shader
-	file.open("Resources/Shaders/fragShader.glsl");
+	file.open(fragShaderLink);
 	if (file.is_open())
 	{
 		while (getline(file, line))

@@ -42,9 +42,10 @@ in vec3 Normal;
 in vec3 FragPos;
 
 uniform sampler2D texture1;
-uniform sampler2D texture2; 
 
 uniform vec3 camPos;
+uniform bool Gamma;
+uniform float gamma;
 
 uniform PointLight pointLights[10];
 uniform DirectionnalLight directLights[10];
@@ -118,6 +119,7 @@ vec3 SpotLightCalcul(SpotLight light, vec3 normal, vec3 viewDir)
 
 void main()
 {
+	vec3 color = texture(texture1, TexCoord).rgb;
 	vec3 norm = normalize(Normal);
 	vec3 viewDir = normalize(camPos - FragPos);
 	vec3 result = vec3(0, 0, 0);
@@ -131,5 +133,11 @@ void main()
 	for (int i = 0; i < directLightCount; i++)
 		result += DirectLightCalcul(directLights[i], norm, viewDir);
 
-	FragColor = mix(texture(texture1, TexCoord), texture(texture2, TexCoord), 0.5) * vec4(result, 1.0);
+	color *= result;
+
+	if(Gamma)
+	{
+		color = pow(color, vec3(1.0/gamma));
+	}
+	FragColor = vec4(color, 1.0);
 };

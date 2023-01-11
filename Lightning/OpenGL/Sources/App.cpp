@@ -101,21 +101,12 @@ void App::Update(int shaderProgram)
 
 	glUseProgram(shaderProgram);
 
-	glUniform3f(glGetUniformLocation(shaderProgram, "camPos"), camera.camPos.x, camera.camPos.y, camera.camPos.z);
 
-	if (PointLight)
-	{
-		PointLightsToShaders(shaderProgram);
-	}
-	if (DirectionalLight)
-	{
-		DirectLightsToShaders(shaderProgram);
-	}
-	if (SpotLight)
-	{
-		SpotLightsToShaders(shaderProgram);
-	}
-
+	OtherToShaders(shaderProgram);
+	PointLightsToShaders(shaderProgram);
+	DirectLightsToShaders(shaderProgram);
+	SpotLightsToShaders(shaderProgram);
+	
 	if (player.model->pos.y <= -50)
 	{
 		player.model->pos = { 0, 10, 0 };
@@ -207,56 +198,72 @@ void App::Update(int shaderProgram)
 	if (Debug)
 	{
 
-		if (ImGui::Begin("Config"))
+		if (ImGui::Begin("Config", 0, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove))
 		{
 			ImGui::Combo("Model List", &selectItem, item.data(), item.size());
 
 			if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
 			{
+				ImGui::Indent(10);
 				if (ImGui::CollapsingHeader("Rotation", ImGuiTreeNodeFlags_DefaultOpen))
 				{
-					ImGui::SliderFloat("Rotation X", &mesh[selectItem]->rot.x, 0, M_PI * 2);
-					ImGui::SliderFloat("Rotation Y", &mesh[selectItem]->rot.y, 0, M_PI * 2);
-					ImGui::SliderFloat("Rotation Z", &mesh[selectItem]->rot.z, 0, M_PI * 2);
+					ImGui::Indent(5);
+					ImGui::SliderFloat("X", &mesh[selectItem]->rot.x, 0, M_PI * 2);
+					ImGui::SliderFloat("Y", &mesh[selectItem]->rot.y, 0, M_PI * 2);
+					ImGui::SliderFloat("Z", &mesh[selectItem]->rot.z, 0, M_PI * 2);
+					ImGui::Unindent(5);
 				}
 				if (ImGui::CollapsingHeader("Position", ImGuiTreeNodeFlags_DefaultOpen))
 				{
-					ImGui::SliderFloat("Position X", &mesh[selectItem]->pos.x, -200, 200);
-					ImGui::SliderFloat("Position Y", &mesh[selectItem]->pos.y, -200, 200);
-					ImGui::SliderFloat("Position Z", &mesh[selectItem]->pos.z, -200, 200);
+					ImGui::Indent(5);
+					ImGui::SliderFloat("X", &mesh[selectItem]->pos.x, -200, 200);
+					ImGui::SliderFloat("Y", &mesh[selectItem]->pos.y, -200, 200);
+					ImGui::SliderFloat("Z", &mesh[selectItem]->pos.z, -200, 200);
+					ImGui::Unindent(5);
 				}
 				if (ImGui::CollapsingHeader("Scale", ImGuiTreeNodeFlags_DefaultOpen))
 				{
-					ImGui::SliderFloat("Scale X", &mesh[selectItem]->scl.x, 0, 50);
-					ImGui::SliderFloat("Scale Y", &mesh[selectItem]->scl.y, 0, 50);
-					ImGui::SliderFloat("Scale Z", &mesh[selectItem]->scl.z, 0, 50);
+					ImGui::Indent(5);
+					ImGui::SliderFloat("X", &mesh[selectItem]->scl.x, 0, 50);
+					ImGui::SliderFloat("Y", &mesh[selectItem]->scl.y, 0, 50);
+					ImGui::SliderFloat("Z", &mesh[selectItem]->scl.z, 0, 50);
+					ImGui::Unindent(5);
 				}
+				ImGui::Unindent(10);
 			}
-		}
-		ImGui::End();
 
-		if (ImGui::Begin("Light Config"))
-		{
 			if (ImGui::CollapsingHeader("Light", ImGuiTreeNodeFlags_DefaultOpen))
 			{
-				if (ImGui::CollapsingHeader("Directionnal", ImGuiTreeNodeFlags_DefaultOpen))
-				{
-					ImGui::Checkbox("DirectionalLight", &DirectionalLight);
+				ImGui::Indent(10);
+				ImGui::Checkbox("Gamma", &Gamma);
 
-					ImGui::SliderFloat("Directional Light\n Intensity", &directLights[0]->diffuseColor.x, 0, 1);
-				}
-				if (ImGui::CollapsingHeader("Point", ImGuiTreeNodeFlags_DefaultOpen))
+				if (ImGui::CollapsingHeader("Directionnal Light", ImGuiTreeNodeFlags_DefaultOpen))
 				{
-					ImGui::Checkbox("PointLight", &PointLight);
-
-					ImGui::SliderFloat("Point Light Intensity", &pointLights[0]->diffuseColor.y, 0, 1);
+					ImGui::Indent(5);
+					ImGui::SliderFloat("Ambiante Color", &directLights[0]->ambientColor.x, -100, 100);
+					ImGui::Unindent(5);
 				}
-				if (ImGui::CollapsingHeader("Spot", ImGuiTreeNodeFlags_DefaultOpen))
+				if (ImGui::CollapsingHeader("Point Light", ImGuiTreeNodeFlags_DefaultOpen))
 				{
-					ImGui::Checkbox("SpotLight", &SpotLight);
+					ImGui::Indent(5);
+					ImGui::SliderFloat("X", &pointLights[0]->position.x, -100, 100);
+					ImGui::SliderFloat("Y", &pointLights[0]->position.y, -100, 100);
+					ImGui::SliderFloat("Z", &pointLights[0]->position.z, -100, 100);
 
-					ImGui::SliderFloat("Spot Light Intensity", &spotLights[0]->diffuseColor.z, 0, 1);
+					ImGui::SliderFloat("Constant", &pointLights[0]->constant, -1, 1);
+					ImGui::SliderFloat("Linear", &pointLights[0]->linear, -1, 1);
+					ImGui::SliderFloat("Quadratic", &pointLights[0]->quadratic, -1, 1);
+					ImGui::Unindent(5);
 				}
+				if (ImGui::CollapsingHeader("Spot Light", ImGuiTreeNodeFlags_DefaultOpen))
+				{
+					ImGui::Indent(5);
+					ImGui::SliderFloat("X", &spotLights[0]->diffuseColor.x, -100, 100);
+					ImGui::SliderFloat("Y", &spotLights[0]->position.y, -100, 100);
+					ImGui::SliderFloat("Z", &spotLights[0]->position.z, -100, 100);
+					ImGui::Unindent(5);
+				}
+				ImGui::Unindent(10);
 			}
 		}
 		ImGui::End();
@@ -286,6 +293,13 @@ void App::Update(int shaderProgram)
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 	glfwSwapBuffers(window);
+}
+
+void App::OtherToShaders(unsigned int shaderProgram)
+{
+	glUniform3f(glGetUniformLocation(shaderProgram, "camPos"), camera.camPos.x, camera.camPos.y, camera.camPos.z);
+	glUniform1f(glGetUniformLocation(shaderProgram, "Gamma"), Gamma);
+	glUniform1f(glGetUniformLocation(shaderProgram, "gamma"), gamma);
 }
 
 void App::DirectLightsToShaders(unsigned int shaderProgram)

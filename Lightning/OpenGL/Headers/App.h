@@ -55,11 +55,13 @@ namespace Core
         bool DirectionalLight = true;
         bool PointLight = true;
         bool SpotLight = true;
-        bool Debug = false;
+        bool Debug = true;
         bool Pause = false;
         bool MenuClose = true;
         bool AZERTY = false;
         bool Option = false;
+        bool Gamma = true;
+        float gamma = 2.2;
         float smoothSpeed = 0.15f;
         unsigned int cubemapTexture;
         Mesh Skybox;
@@ -83,8 +85,9 @@ namespace Core
 
         void Init(AppInitializer init);
         void Update(int shaderProgram);
-        void PointLightsToShaders(unsigned int shaderProgram);
+        void OtherToShaders(unsigned int shaderProgram);
         void DirectLightsToShaders(unsigned int shaderProgram);
+        void PointLightsToShaders(unsigned int shaderProgram);
         void SpotLightsToShaders(unsigned int shaderProgram);
         void processInput(GLFWwindow* window);
         void SphereColl();

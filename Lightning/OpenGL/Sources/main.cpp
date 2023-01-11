@@ -105,7 +105,7 @@ int main()
 	app.directLights.push_back(new DirectionnalLight(Vector3D(0, 0, -1), Vector3D(1, 1, 1)));
 	app.spotLights.push_back(new SpotLight(Vector3D(0, -2, 0), Vector3D(0, 40, 0), Vector3D(1, 1, 1), 1, 0.022f, 0.0019f, M_PI / 3.15));
 
-	app.mesh.push_back(new Mesh(Player,Vector3D(0, 10, 0), Vector3D(0, 3.3f, 0), Vector3D(0.1, 0.1, 0.1), "Resources/Textures/Rammus.png"));
+	app.mesh.push_back(new Mesh(Player,Vector3D(0, 10, 0), Vector3D(0, 3.3f, 0), Vector3D(0.1, 0.1, 0.1), "Resources/Textures/Rammus3.png"));
 
 	app.mesh.push_back(new Mesh(model, Vector3D(0, 0, 0), Vector3D(0, 3, 0), Vector3D(10, 10, 10), "Resources/Textures/Bricks.png"));
 	app.mesh.push_back(new Mesh(model, Vector3D(0, 50, 0), Vector3D(0, 0, 0), Vector3D(1, 1, 1), "Resources/Textures/Bricks.png"));
@@ -113,12 +113,12 @@ int main()
 	app.Skybox = Mesh(model, Vector3D(0, 0, 0), Vector3D(0, 0, 0), Vector3D(1, 1, 1), 1);
 	std::vector<std::string> faces
 	{
-		"Resources/Textures/PX.bmp",
-		"Resources/Textures/NX.bmp",
-		"Resources/Textures/NY.bmp",
-		"Resources/Textures/PY.bmp",
-		"Resources/Textures/PZ.bmp",
-		"Resources/Textures/NZ.bmp",
+		"Resources/Textures/px.png",
+		"Resources/Textures/nx.png",
+		"Resources/Textures/ny.png",
+		"Resources/Textures/py.png",
+		"Resources/Textures/pz.png",
+		"Resources/Textures/nz.png",
 	};
 	app.Skybox.loadCubeMap(faces);
 	app.SphereColl();

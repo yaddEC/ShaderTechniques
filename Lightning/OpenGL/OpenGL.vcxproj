@@ -200,6 +200,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Shaders\fragShader.glsl" />
+    <None Include="Resources\Shaders\HDRfrag.glsl" />
+    <None Include="Resources\Shaders\HDRvert.glsl" />
     <None Include="Resources\Shaders\vertexShader.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

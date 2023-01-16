@@ -71,36 +71,29 @@ namespace LowRenderer
 		Vector3D position;
 		Vector3D direction;
 
-		float constant;
-		float linear;
-		float quadratic;
+		float cutOff;
+		float outerCutOff;
 
-		float angle;  //only between M_PI / 3.1 and 0
-
-		SpotLight(const Vector3D& dir, const Vector3D& pos, const Vector3D& color, float cons, float lin, float quad, float ang)
+		SpotLight(const Vector3D& dir, const Vector3D& pos, const Vector3D& color, float cutoff, float outercutoff)
 		{
 			direction = dir;
 			position = pos;
 			ambientColor = 0.1f * color;
 			diffuseColor = 0.5f * color;
 			specularColor = 1.f * color;
-			constant = cons;
-			linear = lin;
-			quadratic = quad;
-			angle = ang;
+			cutOff = cutoff;
+			outerCutOff = outercutoff;
 		}
 
-		SpotLight(const Vector3D& dir, const Vector3D& pos, const Vector3D& amb, const Vector3D& diff, const Vector3D& spec, float cons, float lin, float quad, float ang)
+		SpotLight(const Vector3D& dir, const Vector3D& pos, const Vector3D& amb, const Vector3D& diff, const Vector3D& spec, float cutoff, float outercutoff)
 		{
 			direction = dir;
 			position = pos;
 			ambientColor = amb;
 			diffuseColor = diff;
 			specularColor = spec;
-			constant = cons;
-			linear = lin;
-			quadratic = quad;
-			angle = ang;
+			cutOff = cutoff;
+			outerCutOff = outercutoff;
 		}
 	};
 }

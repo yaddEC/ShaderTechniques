@@ -4,7 +4,7 @@
 namespace Resources
 {
 
-	void VertexAttributes::Load(std::vector<Vertex> vertices, std::vector<uint32_t> indexes, Buffer vbo, Buffer ebo)
+	void VertexAttributes::Load(std::vector<Vertex> vertices, std::vector<uint32_t> indexes, Buffer& vbo, Buffer& ebo)
 	{
 		glGenBuffers(1, &vbo.buffer);
 		glGenBuffers(1, &ebo.buffer);

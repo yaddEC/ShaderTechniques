@@ -64,8 +64,13 @@ namespace Core
         float gamma = 2.2;
         float smoothSpeed = 0.15f;
         unsigned int cubemapTexture;
+        unsigned int FBO;
+        unsigned int rectVAO, rectVBO;
+        unsigned int framebufferTexture;
+        unsigned int RBO;
         Mesh Skybox;
         Shader skyboxShader;
+        Shader HDR;
 
     private:
         std::stringstream diffuseColor;
@@ -77,6 +82,8 @@ namespace Core
         std::stringstream lightPos;
         std::stringstream lightDir;
         std::stringstream lightAng;
+        std::stringstream cutOff;
+        std::stringstream outerCutOff;
 
 
     public:

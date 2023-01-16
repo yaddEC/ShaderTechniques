@@ -31,7 +31,7 @@ namespace LowRenderer
 
 		void Update(unsigned int shaderProgram, Matrix4 PVMatrix);
 		void SkyboxUpdate(unsigned int shaderProgram, Matrix4 view, Matrix4 projection);
-		Mesh(Model* model, Vector3D Rotation, Vector3D Position, Vector3D Scale, const char* fileName);
+		Mesh(Model* model, Vector3D Position, Vector3D Rotation, Vector3D Scale, const char* fileName);
 		void loadCubeMap(std::vector <std::string> faces);
 		Mesh(Model* model, Vector3D Position, Vector3D Rotation, Vector3D Scale, GLuint texture);
 

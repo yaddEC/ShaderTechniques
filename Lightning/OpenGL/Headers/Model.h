@@ -41,7 +41,7 @@ namespace Resources
 		unsigned int vao;
 		VertexAttributes();
 		~VertexAttributes();
-		void Load(std::vector<Vertex> vertices, std::vector<uint32_t> indexes, Buffer vbo, Buffer ebo);
+		void Load(std::vector<Vertex> vertices, std::vector<uint32_t> indexes, Buffer& vbo, Buffer& ebo);
 		void bind();
 		void unbind();
 

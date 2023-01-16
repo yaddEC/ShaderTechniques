@@ -143,6 +143,8 @@
   <ItemGroup>
     <None Include="Resources\Shaders\fragShader.glsl" />
     <None Include="Resources\Shaders\vertexShader.glsl" />
+    <None Include="Resources\Shaders\HDRvert.glsl" />
+    <None Include="Resources\Shaders\HDRfrag.glsl" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="include">

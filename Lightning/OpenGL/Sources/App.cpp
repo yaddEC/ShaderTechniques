@@ -4,6 +4,18 @@
 using namespace Core;
 using namespace LowRenderer;
 
+float rectangleVertices[] =
+{
+	// Coords    // texCoords
+	 1.0f, -1.0f,  1.0f, 0.0f,
+	-1.0f, -1.0f,  0.0f, 0.0f,
+	-1.0f,  1.0f,  0.0f, 1.0f,
+
+	 1.0f,  1.0f,  1.0f, 1.0f,
+	 1.0f, -1.0f,  1.0f, 0.0f,
+	-1.0f,  1.0f,  0.0f, 1.0f
+};
+
 void App::Init(AppInitializer init)
 {
 	// glfw: initialize and configure
@@ -34,6 +46,11 @@ void App::Init(AppInitializer init)
 		return;
 	}
 
+	skyboxShader.LoadShaders("Resources/Shaders/skyboxVert.glsl", "Resources/Shaders/skyboxFrag.glsl");
+	HDR.LoadShaders("Resources/Shaders/HDRvert.glsl", "Resources/Shaders/HDRfrag.glsl");
+
+	glUseProgram(HDR.shaderProgram);
+	glUniform1i(glGetUniformLocation(HDR.shaderProgram, "screenTexture"), 0);
 
 	GLint flags = 0;
 	glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
@@ -44,13 +61,43 @@ void App::Init(AppInitializer init)
 		glDebugMessageCallback(init.glDegugOutput, nullptr);
 		glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, nullptr, GL_TRUE);
 	}
-	glEnable(GL_DEPTH_TEST);
 
 	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
-	skyboxShader.LoadShaders("Resources/Shaders/skyboxVert.glsl", "Resources/Shaders/skyboxFrag.glsl");
+	// Prepare framebuffer rectangle VBO and VAO
+	glGenVertexArrays(1, &rectVAO);
+	glGenBuffers(1, &rectVBO);
+	glBindVertexArray(rectVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, rectVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(rectangleVertices), &rectangleVertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
 
-	
+	glGenFramebuffers(1, &FBO);
+	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+
+	// Create Framebuffer Texture
+	glGenTextures(1, &framebufferTexture);
+	glBindTexture(GL_TEXTURE_2D, framebufferTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, init.width, init.height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // Prevents edge bleeding
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); // Prevents edge bleeding
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, framebufferTexture, 0);
+
+	// Create Render Buffer Object
+	glGenRenderbuffers(1, &RBO);
+	glBindRenderbuffer(GL_RENDERBUFFER, RBO);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, init.width, init.height);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RBO);
+
+	// Error checking framebuffer
+	auto fboStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+	if (fboStatus != GL_FRAMEBUFFER_COMPLETE)
+		std::cout << "Framebuffer error: " << fboStatus << std::endl;
 }
 
 void App::SphereColl()
@@ -69,14 +116,15 @@ void App::SphereColl()
 void App::Update(int shaderProgram)
 {
 	glfwPollEvents();
+	// Bind the custom framebuffer
+	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glEnable(GL_DEPTH_TEST);
+
 	processInput(window);
 	player.Update(platforms);
-
 	platform1.Update(); 
-
-	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
-	glClear(GL_DEPTH_BUFFER_BIT);
 
 	if (Debug == false)
 	{
@@ -174,12 +222,12 @@ void App::Update(int shaderProgram)
 		SkyCam.inverse(SkyCam, temp);
 		Skybox.SkyboxUpdate(skyboxShader.shaderProgram, temp, camera.projectionMatrix.GetTransposeMat4());
 
-		glUseProgram(shaderProgram);
 		for (int i = 0; i < mesh.size(); i++)
 		{
 			mesh[i]->Update(shaderProgram, PV);
 		}
 	}
+
 
 	static int selectItem = 0;
 	std::vector<const char*> item;
@@ -195,7 +243,10 @@ void App::Update(int shaderProgram)
 		}
 	}
 
-	if (Debug)
+	pointLights[0]->ambientColor.y = pointLights[0]->ambientColor.x;
+	pointLights[0]->ambientColor.z = pointLights[0]->ambientColor.x;
+
+	if (Debug && MenuClose == false)
 	{
 
 		if (ImGui::Begin("Config", 0, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove))
@@ -205,28 +256,29 @@ void App::Update(int shaderProgram)
 			if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
 			{
 				ImGui::Indent(10);
-				if (ImGui::CollapsingHeader("Rotation", ImGuiTreeNodeFlags_DefaultOpen))
-				{
-					ImGui::Indent(5);
-					ImGui::SliderFloat("X", &mesh[selectItem]->rot.x, 0, M_PI * 2);
-					ImGui::SliderFloat("Y", &mesh[selectItem]->rot.y, 0, M_PI * 2);
-					ImGui::SliderFloat("Z", &mesh[selectItem]->rot.z, 0, M_PI * 2);
-					ImGui::Unindent(5);
-				}
 				if (ImGui::CollapsingHeader("Position", ImGuiTreeNodeFlags_DefaultOpen))
 				{
 					ImGui::Indent(5);
-					ImGui::SliderFloat("X", &mesh[selectItem]->pos.x, -200, 200);
-					ImGui::SliderFloat("Y", &mesh[selectItem]->pos.y, -200, 200);
-					ImGui::SliderFloat("Z", &mesh[selectItem]->pos.z, -200, 200);
+					ImGui::SliderFloat("Position X", &mesh[selectItem]->pos.x, -200, 200);
+					ImGui::SliderFloat("Position Y", &mesh[selectItem]->pos.y, -200, 200);
+					ImGui::SliderFloat("Position Z", &mesh[selectItem]->pos.z, -200, 200);
 					ImGui::Unindent(5);
 				}
+				if (ImGui::CollapsingHeader("Rotation", ImGuiTreeNodeFlags_DefaultOpen))
+				{
+					ImGui::Indent(5);
+					ImGui::SliderFloat("Rotation X", &mesh[selectItem]->rot.x, 0, M_PI * 2);
+					ImGui::SliderFloat("Rotation Y", &mesh[selectItem]->rot.y, 0, M_PI * 2);
+					ImGui::SliderFloat("Rotation Z", &mesh[selectItem]->rot.z, 0, M_PI * 2);
+					ImGui::Unindent(5);
+				}
+				
 				if (ImGui::CollapsingHeader("Scale", ImGuiTreeNodeFlags_DefaultOpen))
 				{
 					ImGui::Indent(5);
-					ImGui::SliderFloat("X", &mesh[selectItem]->scl.x, 0, 50);
-					ImGui::SliderFloat("Y", &mesh[selectItem]->scl.y, 0, 50);
-					ImGui::SliderFloat("Z", &mesh[selectItem]->scl.z, 0, 50);
+					ImGui::SliderFloat("Scale X", &mesh[selectItem]->scl.x, 0, 50);
+					ImGui::SliderFloat("Scale Y", &mesh[selectItem]->scl.y, 0, 50);
+					ImGui::SliderFloat("Scale Z", &mesh[selectItem]->scl.z, 0, 50);
 					ImGui::Unindent(5);
 				}
 				ImGui::Unindent(10);
@@ -246,21 +298,23 @@ void App::Update(int shaderProgram)
 				if (ImGui::CollapsingHeader("Point Light", ImGuiTreeNodeFlags_DefaultOpen))
 				{
 					ImGui::Indent(5);
-					ImGui::SliderFloat("X", &pointLights[0]->position.x, -100, 100);
-					ImGui::SliderFloat("Y", &pointLights[0]->position.y, -100, 100);
-					ImGui::SliderFloat("Z", &pointLights[0]->position.z, -100, 100);
+					ImGui::SliderFloat("Point X", &pointLights[0]->position.x, -100, 100);
+					ImGui::SliderFloat("Point Y", &pointLights[0]->position.y, -100, 100);
+					ImGui::SliderFloat("Point Z", &pointLights[0]->position.z, -100, 100);
 
 					ImGui::SliderFloat("Constant", &pointLights[0]->constant, -1, 1);
 					ImGui::SliderFloat("Linear", &pointLights[0]->linear, -1, 1);
 					ImGui::SliderFloat("Quadratic", &pointLights[0]->quadratic, -1, 1);
+
+					ImGui::SliderFloat("Intensity", &pointLights[0]->ambientColor.x, 1, 10000);
 					ImGui::Unindent(5);
 				}
 				if (ImGui::CollapsingHeader("Spot Light", ImGuiTreeNodeFlags_DefaultOpen))
 				{
 					ImGui::Indent(5);
-					ImGui::SliderFloat("X", &spotLights[0]->diffuseColor.x, -100, 100);
-					ImGui::SliderFloat("Y", &spotLights[0]->position.y, -100, 100);
-					ImGui::SliderFloat("Z", &spotLights[0]->position.z, -100, 100);
+					ImGui::SliderFloat("Spot X", &spotLights[0]->diffuseColor.x, -100, 100);
+					ImGui::SliderFloat("Spot Y", &spotLights[0]->position.y, -100, 100);
+					ImGui::SliderFloat("Spot Z", &spotLights[0]->position.z, -100, 100);
 					ImGui::Unindent(5);
 				}
 				ImGui::Unindent(10);
@@ -289,6 +343,17 @@ void App::Update(int shaderProgram)
 		ImGui::End();
 	}
 
+	// Bind the default framebuffer
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	// Draw the framebuffer rectangle
+	glUseProgram(HDR.shaderProgram);
+	glBindSampler(0, 0);
+	glBindVertexArray(rectVAO);
+	glBindTexture(GL_TEXTURE_2D, framebufferTexture);
+	glDisable(GL_DEPTH_TEST); // prevents framebuffer rectangle from being discarded
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+	glEnable(GL_DEPTH_TEST);
+	
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
@@ -376,37 +441,31 @@ void App::SpotLightsToShaders(unsigned int shaderProgram)
 		diffuseColor << "spotLights[" << i << "].diffuseColor";
 		specularColor << "spotLights[" << i << "].specularColor";
 
-		constant << "spotLights[" << i << "].constant";
-		linear << "spotLights[" << i << "].linear";
-		quadratic << "spotLights[" << i << "].quadratic";
-
 		lightPos << "spotLights[" << i << "].position";
 		lightDir << "spotLights[" << i << "].direction";
-		lightAng << "spotLights[" << i << "].angle";
+
+		cutOff << "spotLights[" << i << "].cutOff";
+		outerCutOff << "spotLights[" << i << "].outerCutOff";
 
 		glUniform3f(glGetUniformLocation(shaderProgram, diffuseColor.str().c_str()), spotLights[i]->diffuseColor.x, spotLights[i]->diffuseColor.y, spotLights[i]->diffuseColor.z);
 		glUniform3f(glGetUniformLocation(shaderProgram, ambientColor.str().c_str()), spotLights[i]->ambientColor.x, spotLights[i]->ambientColor.y, spotLights[i]->ambientColor.z);
 		glUniform3f(glGetUniformLocation(shaderProgram, specularColor.str().c_str()), spotLights[i]->specularColor.x, spotLights[i]->specularColor.y, spotLights[i]->specularColor.z);
 
-		glUniform1f(glGetUniformLocation(shaderProgram, constant.str().c_str()), spotLights[i]->constant);
-		glUniform1f(glGetUniformLocation(shaderProgram, linear.str().c_str()), spotLights[i]->linear);
-		glUniform1f(glGetUniformLocation(shaderProgram, quadratic.str().c_str()), spotLights[i]->quadratic);
-
 		glUniform3f(glGetUniformLocation(shaderProgram, lightPos.str().c_str()), spotLights[i]->position.x, spotLights[i]->position.y, spotLights[i]->position.z);
 		glUniform3f(glGetUniformLocation(shaderProgram, lightDir.str().c_str()), spotLights[i]->direction.x, spotLights[i]->direction.y, spotLights[i]->direction.z);
-		glUniform1f(glGetUniformLocation(shaderProgram, lightAng.str().c_str()), spotLights[i]->angle);
+
+		glUniform1f(glGetUniformLocation(shaderProgram, cutOff.str().c_str()), spotLights[i]->cutOff);
+		glUniform1f(glGetUniformLocation(shaderProgram, outerCutOff.str().c_str()), spotLights[i]->outerCutOff);
 
 		diffuseColor.str("");
 		ambientColor.str("");
 		specularColor.str("");
 
-		constant.str("");
-		linear.str("");
-		quadratic.str("");
+		cutOff.str("");
+		outerCutOff.str("");
 
 		lightPos.str("");
 		lightDir.str("");
-		lightAng.str("");
 
 	}
 

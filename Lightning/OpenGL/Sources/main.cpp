@@ -83,7 +83,11 @@ int main()
 	Log log;
 	Model* model;
 	Model* Player;
+	Model* StandDio;
+	Model* StandJotaro;
+	Model* Jotaro;
 	Shader shader;
+	Shader skybox;
 	Matrix4 mat4;
 	ResourcesManager manager;
 	app.Init(init);
@@ -96,19 +100,29 @@ int main()
 	ImGui_ImplOpenGL3_Init("#version 330");
 
 	manager.CreateResource<Model>("Cube", "Resources/Obj/Cube.obj");
-	manager.CreateResource<Model>("Player", "Resources/Obj/Rammus.obj");
+	manager.CreateResource<Model>("Player", "Resources/Obj/DIO.obj");
+	manager.CreateResource<Model>("StandDio", "Resources/Obj/TheWorld.obj");
+	manager.CreateResource<Model>("StandJotaro", "Resources/Obj/StarPlatinum.obj");
+	manager.CreateResource<Model>("Jotaro", "Resources/Obj/Jotaro.obj");
 	model = manager.GetResource<Model>("Cube");
 	Player = manager.GetResource<Model>("Player");
-	shader.LoadShaders();
+	StandDio = manager.GetResource<Model>("StandDio");
+	StandJotaro = manager.GetResource<Model>("StandJotaro");
+	Jotaro = manager.GetResource<Model>("Jotaro");
+
+	shader.LoadShaders("Resources/Shaders/vertexShader.glsl", "Resources/Shaders/fragShader.glsl");
 	
-	app.pointLights.push_back(new PointLight(Vector3D(0, 10, 0), Vector3D(1, 1, 1), 0, 0.022f, 0.0019f));
-	app.directLights.push_back(new DirectionnalLight(Vector3D(0, 0, -1), Vector3D(1, 1, 1)));
-	app.spotLights.push_back(new SpotLight(Vector3D(0, -2, 0), Vector3D(0, 40, 0), Vector3D(1, 1, 1), 1, 0.022f, 0.0019f, M_PI / 3.15));
+	app.directLights.push_back(new DirectionnalLight(Vector3D(0, 0, -1), Vector3D(0, 0, 0)));
+	app.pointLights.push_back(new PointLight(Vector3D(0, 25, 0), Vector3D(10, 10, 10), 1, -0.35f, 0.050f));
+	app.spotLights.push_back(new SpotLight(Vector3D(0, -2, 0), Vector3D(0, 40, 0), Vector3D(0, 0, 0), 0.91f, 0.82f));
 
-	app.mesh.push_back(new Mesh(Player,Vector3D(0, 10, 0), Vector3D(0, 3.3f, 0), Vector3D(0.1, 0.1, 0.1), "Resources/Textures/Rammus3.png"));
+	app.mesh.push_back(new Mesh(Player, Vector3D(0, 10, 0), Vector3D(0, 3.3f, 0), Vector3D(5, 5, 5), "Resources/Textures/DIO1.png"));
+	app.mesh.push_back(new Mesh(StandDio, Vector3D(0, 10, 10), Vector3D(0, 3.3f, 0), Vector3D(5, 5, 5), "Resources/Textures/DIO2.png"));
+	app.mesh.push_back(new Mesh(StandJotaro, Vector3D(0, 10, -20), Vector3D(0, 6.3f, 0), Vector3D(5, 5, 5), "Resources/Textures/Jotaro.png"));
+	app.mesh.push_back(new Mesh(Jotaro,Vector3D(0, 10, -10), Vector3D(0, 6.3f, 0), Vector3D(5, 5, 5), "Resources/Textures/Bloodtaro.png"));
 
-	app.mesh.push_back(new Mesh(model, Vector3D(0, 0, 0), Vector3D(0, 3, 0), Vector3D(10, 10, 10), "Resources/Textures/Bricks.png"));
-	app.mesh.push_back(new Mesh(model, Vector3D(0, 50, 0), Vector3D(0, 0, 0), Vector3D(1, 1, 1), "Resources/Textures/Bricks.png"));
+	app.mesh.push_back(new Mesh(model, Vector3D(0, 0, 0), Vector3D(0, 3, 0), Vector3D(100, 10, 100), "Resources/Textures/Bricks.png"));
+	app.mesh.push_back(new Mesh(model, Vector3D(0, 50, 0), Vector3D(0, 0, 0), Vector3D(10, 10, 10), "Resources/Textures/Bricks.png"));
 
 	app.Skybox = Mesh(model, Vector3D(0, 0, 0), Vector3D(0, 0, 0), Vector3D(1, 1, 1), 1);
 	std::vector<std::string> faces

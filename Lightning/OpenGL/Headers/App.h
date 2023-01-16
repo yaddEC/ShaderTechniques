@@ -60,18 +60,21 @@ namespace Core
         bool MenuClose = true;
         bool AZERTY = false;
         bool Option = false;
-        bool Gamma = true;
+        bool Gamma = false;
         float gamma = 2.2;
         float smoothSpeed = 0.15f;
         unsigned int cubemapTexture;
         unsigned int FBO;
         unsigned int rectVAO, rectVBO;
-        unsigned int framebufferTexture;
+        unsigned int postProcessingTexture;
+        unsigned int bloomTexture;
         unsigned int RBO;
+        unsigned int pingpongFBO[2];
+        unsigned int pingpongBuffer[2];
         Mesh Skybox;
         Shader skyboxShader;
-        Shader Filters;
-        Shader HDR;
+        Shader filtersShader;
+        Shader bloomShader;
 
     private:
         std::stringstream diffuseColor;

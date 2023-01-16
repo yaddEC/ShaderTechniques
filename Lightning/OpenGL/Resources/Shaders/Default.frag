@@ -34,7 +34,8 @@ struct SpotLight {
 	float angle;
 };
 
-out vec4 FragColor;
+layout (location = 0) out vec4 FragColor;
+layout (location = 1) out vec4 bloomEffect;
 
 in vec2 TexCoord;
 in vec3 Normal;
@@ -139,8 +140,13 @@ void main()
 	color *= result;
 
 	if(Gamma)
-	{
 		color = pow(color, vec3(1.0/gamma));
-	}
+	
 	FragColor = vec4(color, 1.0);
+	
+	float brightness = dot(FragColor.rgb, vec3(0.2126, 0.7152, 0.0722));
+	if(brightness > 1.0f)
+		bloomEffect = vec4(FragColor.rgb, 1.0f);
+	else
+		bloomEffect = vec4(0.0f, 0.0f, 0.0f, 1.0f); 
 };

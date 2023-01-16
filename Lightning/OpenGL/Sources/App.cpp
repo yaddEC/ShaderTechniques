@@ -47,11 +47,15 @@ void App::Init(AppInitializer init)
 	}
 
 	skyboxShader.LoadShaders("Resources/Shaders/Skybox.vert", "Resources/Shaders/Skybox.frag");
-	Filters.LoadShaders("Resources/Shaders/Filters.vert", "Resources/Shaders/Filters.frag");
+	filtersShader.LoadShaders("Resources/Shaders/Filters.vert", "Resources/Shaders/Filters.frag");
+	bloomShader.LoadShaders("Resources/Shaders/Filters.vert", "Resources/Shaders/Bloom.frag");
 
-	glUseProgram(Filters.shaderProgram);
-	glUniform1i(glGetUniformLocation(Filters.shaderProgram, "screenTexture"), 0);
-
+	glUseProgram(filtersShader.shaderProgram);
+	glUniform1i(glGetUniformLocation(filtersShader.shaderProgram, "screenTexture"), 0);
+	glUniform1f(glGetUniformLocation(filtersShader.shaderProgram, "gamma"), gamma);
+	glUseProgram(bloomShader.shaderProgram);
+	glUniform1i(glGetUniformLocation(bloomShader.shaderProgram, "screenTexture"), 0);
+	
 	GLint flags = 0;
 	glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
 	if (flags & GL_CONTEXT_FLAG_DEBUG_BIT)
@@ -79,14 +83,16 @@ void App::Init(AppInitializer init)
 	glBindFramebuffer(GL_FRAMEBUFFER, FBO);
 
 	// Create Framebuffer Texture
-	glGenTextures(1, &framebufferTexture);
-	glBindTexture(GL_TEXTURE_2D, framebufferTexture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, init.width, init.height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glGenTextures(1, &postProcessingTexture);
+	glBindTexture(GL_TEXTURE_2D, postProcessingTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, init.width, init.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // Prevents edge bleeding
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); // Prevents edge bleeding
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, framebufferTexture, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, postProcessingTexture, 0);
+
+	
 
 	// Create Render Buffer Object
 	glGenRenderbuffers(1, &RBO);
@@ -94,10 +100,37 @@ void App::Init(AppInitializer init)
 	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, init.width, init.height);
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RBO);
 
+	glGenTextures(1, &bloomTexture);
+	glBindTexture(GL_TEXTURE_2D, bloomTexture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, init.width, init.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, bloomTexture, 0);
+
+	unsigned int attachement[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
+	glDrawBuffers(2, attachement);
+
+
 	// Error checking framebuffer
 	auto fboStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 	if (fboStatus != GL_FRAMEBUFFER_COMPLETE)
 		std::cout << "Framebuffer error: " << fboStatus << std::endl;
+	
+	glGenFramebuffers(2, pingpongFBO);
+	glGenTextures(2, pingpongBuffer);
+	for (unsigned int i = 0; i < 2; i++)
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBO[i]);
+		glBindTexture(GL_TEXTURE_2D, pingpongBuffer[i]);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, init.width, init.height, 0, GL_RGBA, GL_FLOAT, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, pingpongBuffer[i], 0);
+	}
 }
 
 void App::SphereColl()
@@ -343,14 +376,44 @@ void App::Update(int shaderProgram)
 		ImGui::End();
 	}
 
-	// Bind the default framebuffer
+	bool horizontal = true;
+	bool firstIteration = true;
+	// Amount of time to bounce the blur
+	int amount = 2;
+	glUseProgram(bloomShader.shaderProgram);
+	for (unsigned int i = 0; i < amount; i++)
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER, pingpongFBO[horizontal]);
+		glUniform1i(glGetUniformLocation(bloomShader.shaderProgram, "horizontal"), horizontal);
+
+		// In the first bounc we want to get the data from the bloomTexture
+		if (firstIteration)
+		{
+			glBindTexture(GL_TEXTURE_2D, bloomTexture);
+			firstIteration = false;
+		}
+		// Move the data between the pingPong textures
+		else
+		{
+			glBindTexture(GL_TEXTURE_2D, pingpongBuffer[!horizontal]);
+		}
+
+		// Render the image
+		glBindVertexArray(rectVAO);
+		glDisable(GL_DEPTH_TEST);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+
+		// Switch between vertical and horizontal blurring
+		horizontal = !horizontal;
+	}
+	
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	// Draw the framebuffer rectangle
-	glUseProgram(Filters.shaderProgram);
+	glUseProgram(filtersShader.shaderProgram);
 	glBindSampler(0, 0);
 	glBindVertexArray(rectVAO);
-	glBindTexture(GL_TEXTURE_2D, framebufferTexture);
-	glDisable(GL_DEPTH_TEST); // prevents framebuffer rectangle from being discarded
+	glDisable(GL_DEPTH_TEST);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, postProcessingTexture);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 	glEnable(GL_DEPTH_TEST);
 	
@@ -365,6 +428,7 @@ void App::OtherToShaders(unsigned int shaderProgram)
 	glUniform3f(glGetUniformLocation(shaderProgram, "camPos"), camera.camPos.x, camera.camPos.y, camera.camPos.z);
 	glUniform1f(glGetUniformLocation(shaderProgram, "Gamma"), Gamma);
 	glUniform1f(glGetUniformLocation(shaderProgram, "gamma"), gamma);
+	
 }
 
 void App::DirectLightsToShaders(unsigned int shaderProgram)

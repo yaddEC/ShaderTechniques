@@ -113,7 +113,7 @@ int main()
 	shader.LoadShaders("Resources/Shaders/Default.vert", "Resources/Shaders/Default.frag");
 	
 	app.directLights.push_back(new DirectionnalLight(Vector3D(0, 0, -1), Vector3D(0, 0, 0)));
-	app.pointLights.push_back(new PointLight(Vector3D(0, 25, 0), Vector3D(10, 10, 10), 1, -0.35f, 0.050f));
+	app.pointLights.push_back(new PointLight(Vector3D(0, 25, 0), Vector3D(100, 100, 100), 1, -0.35f, 0.050f));
 	app.spotLights.push_back(new SpotLight(Vector3D(0, -2, 0), Vector3D(0, 40, 0), Vector3D(0, 0, 0), 0.91f, 0.82f));
 
 	app.mesh.push_back(new Mesh(Player, Vector3D(0, 10, 0), Vector3D(0, 3.3f, 0), Vector3D(5, 5, 5), "Resources/Textures/DIO1.png"));

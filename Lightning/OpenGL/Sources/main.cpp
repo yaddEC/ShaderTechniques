@@ -110,7 +110,7 @@ int main()
 	StandJotaro = manager.GetResource<Model>("StandJotaro");
 	Jotaro = manager.GetResource<Model>("Jotaro");
 
-	shader.LoadShaders("Resources/Shaders/vertexShader.glsl", "Resources/Shaders/fragShader.glsl");
+	shader.LoadShaders("Resources/Shaders/Default.vert", "Resources/Shaders/Default.frag");
 	
 	app.directLights.push_back(new DirectionnalLight(Vector3D(0, 0, -1), Vector3D(0, 0, 0)));
 	app.pointLights.push_back(new PointLight(Vector3D(0, 25, 0), Vector3D(10, 10, 10), 1, -0.35f, 0.050f));

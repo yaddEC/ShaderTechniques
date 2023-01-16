@@ -70,6 +70,7 @@ namespace Core
         unsigned int RBO;
         Mesh Skybox;
         Shader skyboxShader;
+        Shader Filters;
         Shader HDR;
 
     private:

@@ -18,16 +18,16 @@ vec2 offsets[9] = vec2[]
 float kernel[9] = float[]
 (
     1,  1, 1,
-    1, -7, 1,
+    1, -8, 1,
     1,  1, 1
 );
 
 void main()
 {
-    /*vec3 color = vec3(0.0f);
+    vec3 color = vec3(0.0f);
     for(int i = 0; i < 9; i++)
         color += vec3(texture(screenTexture, TexCoord.st + offsets[i])) * kernel[i];
-    FragColor = vec4(color, 1.0f);*/
+    FragColor = vec4(color, 1.0f);
 
     //FragColor = vec4(1.0f) - texture(screenTexture, TexCoord);
 
@@ -35,5 +35,5 @@ void main()
     float avg = (tex.x + tex.y + tex.z) / 3.0f;
     FragColor = vec4(avg, avg, avg, 1.0f);*/
 
-    FragColor = texture(screenTexture, TexCoord);
+    //FragColor = texture(screenTexture, TexCoord);
 }

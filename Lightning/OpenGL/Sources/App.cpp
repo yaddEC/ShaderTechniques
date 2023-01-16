@@ -46,11 +46,11 @@ void App::Init(AppInitializer init)
 		return;
 	}
 
-	skyboxShader.LoadShaders("Resources/Shaders/skyboxVert.glsl", "Resources/Shaders/skyboxFrag.glsl");
-	HDR.LoadShaders("Resources/Shaders/HDRvert.glsl", "Resources/Shaders/HDRfrag.glsl");
+	skyboxShader.LoadShaders("Resources/Shaders/Skybox.vert", "Resources/Shaders/Skybox.frag");
+	Filters.LoadShaders("Resources/Shaders/Filters.vert", "Resources/Shaders/Filters.frag");
 
-	glUseProgram(HDR.shaderProgram);
-	glUniform1i(glGetUniformLocation(HDR.shaderProgram, "screenTexture"), 0);
+	glUseProgram(Filters.shaderProgram);
+	glUniform1i(glGetUniformLocation(Filters.shaderProgram, "screenTexture"), 0);
 
 	GLint flags = 0;
 	glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
@@ -346,7 +346,7 @@ void App::Update(int shaderProgram)
 	// Bind the default framebuffer
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	// Draw the framebuffer rectangle
-	glUseProgram(HDR.shaderProgram);
+	glUseProgram(Filters.shaderProgram);
 	glBindSampler(0, 0);
 	glBindVertexArray(rectVAO);
 	glBindTexture(GL_TEXTURE_2D, framebufferTexture);

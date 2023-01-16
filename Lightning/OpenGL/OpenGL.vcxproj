@@ -199,10 +199,12 @@
     <ClInclude Include="Imgui\imstb_truetype.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\Shaders\fragShader.glsl" />
-    <None Include="Resources\Shaders\HDRfrag.glsl" />
-    <None Include="Resources\Shaders\HDRvert.glsl" />
-    <None Include="Resources\Shaders\vertexShader.glsl" />
+    <None Include="Resources\Shaders\Default.frag" />
+    <None Include="Resources\Shaders\Default.vert" />
+    <None Include="Resources\Shaders\Filters.frag" />
+    <None Include="Resources\Shaders\Filters.vert" />
+    <None Include="Resources\Shaders\Skybox.frag" />
+    <None Include="Resources\Shaders\Skybox.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

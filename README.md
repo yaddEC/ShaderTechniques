@@ -1,13 +1,13 @@
-# PlatformerGL
+# Lightning Effect on OpenGL
 
 ## Presentation
 
 
 ### Introduction
 -----------
-`PlatformerGL`<br>
-The goal of this project was to make a platformer using our own game engine.<br>
-This project started on `May 31` and the beta will end on `June 10`. <br>
+`Lightning Effect`<br>
+The goal of this project was to make light effects using our own game engine.<br>
+This project started on `January 2nd` and the beta will end on `January 20`. <br>
 
 ## Play Menu
 -----------
@@ -48,28 +48,19 @@ In Pause Menu:
 - `Debug` = Open Debug Options.<br>
 - `Quit` = Quit the Game.<br>
 
-## Make Collision
-
-### Model
+## Change Filters and Exposure
 -----------
-To add models, go to main and add a new mesh with coordinates and textures.<br>
+You can choose between 3 different filters in the Debug mode:
+- the Default Filter
+- the Negated Filter 
+- the Neon Filter
+
+You can also change the light exposure on the graphic interface
+
+## WARNING
+If you experience dizziness, altered vision, eye or muscle twitches, loss of awareness, disorientation, any involuntary movement, or convulsions while playing, do not click on the DANGER CHECKBOX and consult your doctor. Seizure Warning.
 
 
-![png](PlatformerGL/OpenGL/Assets/4.PNG)
-
-Then go to the 'SphereCol' funtion on app and initialise the Platform object using data pointer from the mesh you just created.
-
-```cpp
-	platform1 = OBBCollider(&mesh[1]->pos, OBB(&mesh[1]->scl,&mesh[1]->rot));
-	platforms.push_back(Platform(platform1, &player2.colVisualisation));
-    //player2.colVisualisation serves no purpose yet, it was made so that the platform could have different model
-```
-## Gravity
-To change the gravity value in the Actor.h file
-
-```cpp
-#define GRAVITY     -1
-```
 
 ## Building
 
